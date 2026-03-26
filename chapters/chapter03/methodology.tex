@@ -1,0 +1,349 @@
+\chapter{Методология}
+\label{chap:methodology}
+\setlength{\parskip}{0.8em}
+
+\section{Описание набора данных}
+
+\subsection{Источник данных}
+
+Основной набор данных — \textit{Skin Burn Dataset}, опубликованный на платформе Kaggle~\cite{kaggle_burn_dataset}, содержащий \textbf{1\,225 изображений} ожоговых поражений кожи с аннотациями в формате YOLO. Датасет включает три класса ожогов различной степени тяжести с размеченными ограничивающими прямоугольниками (bounding boxes).
+
+\subsection{Описание классов}
+
+Таблица~\ref{tab:classes} описывает все 3 класса набора данных и их клиническую интерпретацию.
+
+\begin{table}[H]
+\centering
+\caption{Классы ожогов и их характеристики}
+\label{tab:classes}
+\begin{tabular}{p{1.5cm} p{3.5cm} p{3cm} p{5.5cm}}
+\toprule
+\textbf{ID} & \textbf{Название} & \textbf{Мед. термин} & \textbf{Клиническое описание} \\
+\midrule
+0 & \texttt{first\_degree}  & Ожог I степени  & Поверхностный ожог, затрагивает только эпидермис \\
+1 & \texttt{second\_degree} & Ожог II степени & Частичная толщина, проникает в дерму \\
+2 & \texttt{third\_degree}  & Ожог III степени & Полная толщина, разрушает все слои кожи \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Распределение классов}
+
+Набор данных разделён на обучающую (80\%, $n{=}980$) и валидационную (20\%, $n{=}245$) выборки. Распределение аннотаций по классам представлено в Таблице~\ref{tab:distribution}.
+
+\begin{table}[H]
+\centering
+\caption{Распределение аннотаций по классам}
+\label{tab:distribution}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Класс} & \textbf{Train} & \textbf{Val} & \textbf{Всего} \\
+\midrule
+first\_degree (I ст.)   & 669 & 203 & 872 \\
+second\_degree (II ст.) & 797 & 190 & 987 \\
+third\_degree (III ст.) & 280 & 74  & 354 \\
+\midrule
+\textbf{Итого} & \textbf{1\,746} & \textbf{467} & \textbf{2\,213} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Датасет демонстрирует дисбаланс классов: ожоги третьей степени представлены в 2,8 раза реже, чем ожоги второй степени. Это соответствует реальной клинической практике, где тяжёлые ожоги встречаются реже.
+
+\section{Формат аннотаций YOLO}
+
+Каждое изображение сопровождается текстовым файлом аннотации в формате YOLO:
+
+\begin{equation}
+    \text{annotation} = (\texttt{class\_id}, x_c, y_c, w, h)
+\label{eq:yolo_format}
+\end{equation}
+
+\noindent где \texttt{class\_id} — идентификатор класса (0, 1 или 2); $(x_c, y_c)$ — нормализованные координаты центра ограничивающего прямоугольника; $(w, h)$ — нормализованные ширина и высота. Все значения находятся в диапазоне $[0, 1]$, нормализованы относительно размеров изображения.
+
+Пример аннотации:
+\begin{verbatim}
+1 0.5717 0.5138 0.2975 0.4309
+1 0.5860 0.1519 0.1541 0.1823
+\end{verbatim}
+
+Это означает, что на изображении обнаружены два ожога второй степени (class\_id = 1) с указанными координатами.
+
+\section{Конвейер предобработки данных}
+
+\subsection{Загрузка и подготовка датасета}
+
+Датасет загружается из Kaggle с использованием библиотеки \texttt{kagglehub}:
+
+\begin{lstlisting}[language=Python, caption=Загрузка датасета из Kaggle, label=lst:download]
+import kagglehub
+from pathlib import Path
+
+def download_dataset() -> Path:
+    path = kagglehub.dataset_download(
+        "shubhambaid/skin-burn-dataset"
+    )
+    return Path(path)
+\end{lstlisting}
+
+\subsection{Разделение на train/val}
+
+Датасет разделяется на обучающую и валидационную выборки с соотношением 80/20 и фиксированным random seed для воспроизводимости:
+
+\begin{lstlisting}[language=Python, caption=Разделение данных, label=lst:split]
+import random
+
+VAL_SPLIT = 0.2
+random.seed(42)
+
+image_files = list(source_dir.glob("*.jpg"))
+random.shuffle(image_files)
+
+split_idx = int(len(image_files) * (1 - VAL_SPLIT))
+train_images = image_files[:split_idx]
+val_images = image_files[split_idx:]
+\end{lstlisting}
+
+\subsection{Формирование структуры директорий}
+
+Для совместимости с YOLOv8 создаётся следующая структура:
+
+\begin{verbatim}
+dataset/
+  |-- images/
+  |     |-- train/    # 980 изображений
+  |     |-- val/      # 245 изображений
+  |-- labels/
+  |     |-- train/    # 980 файлов аннотаций
+  |     |-- val/      # 245 файлов аннотаций
+  |-- data.yaml       # Конфигурационный файл
+\end{verbatim}
+
+\subsection{Конфигурационный файл data.yaml}
+
+\begin{lstlisting}[language=Python, caption=Содержимое data.yaml, label=lst:yaml]
+path: /path/to/dataset
+train: images/train
+val: images/val
+
+names:
+  0: first_degree
+  1: second_degree
+  2: third_degree
+\end{lstlisting}
+
+\section{Архитектура модели YOLOv8n}
+
+\subsection{Выбор варианта модели}
+
+Для данного исследования выбран YOLOv8n (nano) — компактный вариант архитектуры с приблизительно 3,2~млн параметров. Выбор обоснован следующими факторами:
+
+\begin{enumerate}
+    \item \textbf{Баланс скорости и точности}: YOLOv8n обеспечивает детекцию в реальном времени при сохранении конкурентной точности.
+    \item \textbf{Размер датасета}: Для датасета из 1\,225 изображений крупные модели избыточны и склонны к переобучению.
+    \item \textbf{Практическое применение}: Компактная модель легче интегрировать в мобильные и веб-приложения.
+\end{enumerate}
+
+\subsection{Архитектурные компоненты}
+
+\textbf{Backbone (CSPDarknet):} Извлекает признаки из входного изображения через последовательность C2f-блоков (Cross Stage Partial с двумя свёртками):
+
+\begin{equation}
+    \mathbf{h}_{out} = \text{Concat}\left(\mathbf{h}_{main}, \mathbf{h}_{shortcut}\right)
+\label{eq:c2f}
+\end{equation}
+
+\noindent где $\mathbf{h}_{main}$ — выход основной ветви через bottleneck-блоки; $\mathbf{h}_{shortcut}$ — shortcut-соединение.
+
+\textbf{Neck (PANet):} Path Aggregation Network агрегирует признаки разных масштабов для детекции объектов различного размера.
+
+\textbf{Head (Decoupled):} Разделённая голова с независимыми ветвями для классификации и регрессии координат.
+
+\subsection{Трансферное обучение}
+
+Модель инициализируется весами, предобученными на датасете COCO (Common Objects in Context, 80 классов, $>$330K изображений). Предобученные веса загружаются из файла \texttt{yolov8n.pt}:
+
+\begin{lstlisting}[language=Python, caption=Инициализация модели, label=lst:init]
+from ultralytics import YOLO
+
+model = YOLO("yolov8n.pt")  # 6.2 MB
+\end{lstlisting}
+
+\section{Конфигурация обучения}
+
+\subsection{Гиперпараметры}
+
+Таблица~\ref{tab:hyperparams} содержит основные гиперпараметры обучения.
+
+\begin{table}[H]
+\centering
+\caption{Гиперпараметры обучения YOLOv8n}
+\label{tab:hyperparams}
+\begin{tabular}{lll}
+\toprule
+\textbf{Параметр} & \textbf{Значение} & \textbf{Описание} \\
+\midrule
+\texttt{epochs}        & 100  & Количество эпох обучения \\
+\texttt{batch}         & 32   & Размер батча \\
+\texttt{imgsz}         & 640  & Размер входного изображения \\
+\texttt{lr0}           & 0.01 & Начальная скорость обучения \\
+\texttt{lrf}           & 0.01 & Финальный LR как доля от lr0 \\
+\texttt{momentum}      & 0.937 & SGD momentum \\
+\texttt{weight\_decay} & 0.0005 & L2-регуляризация \\
+\texttt{warmup\_epochs}& 3.0  & Число эпох разогрева \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Весовые коэффициенты потерь}
+
+Функция потерь YOLOv8 состоит из трёх компонентов с весами:
+
+\begin{table}[H]
+\centering
+\caption{Весовые коэффициенты функции потерь}
+\label{tab:loss_weights}
+\begin{tabular}{lcl}
+\toprule
+\textbf{Компонент} & \textbf{Вес} & \textbf{Описание} \\
+\midrule
+$\mathcal{L}_{box}$ (CIoU)  & 7.5 & Потери регрессии ограничивающих прямоугольников \\
+$\mathcal{L}_{cls}$ (BCE)   & 0.5 & Потери классификации \\
+$\mathcal{L}_{dfl}$ (DFL)   & 1.5 & Distribution Focal Loss \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Аугментация данных}
+
+Для повышения обобщающей способности модели применяется набор аугментаций:
+
+\begin{table}[H]
+\centering
+\caption{Параметры аугментации данных}
+\label{tab:augmentation}
+\begin{tabular}{lll}
+\toprule
+\textbf{Аугментация} & \textbf{Значение} & \textbf{Описание} \\
+\midrule
+\texttt{hsv\_h}     & 0.015 & Изменение оттенка (hue) \\
+\texttt{hsv\_s}     & 0.7   & Изменение насыщенности \\
+\texttt{hsv\_v}     & 0.4   & Изменение яркости \\
+\texttt{translate}  & 0.1   & Случайный сдвиг \\
+\texttt{scale}      & 0.5   & Случайное масштабирование \\
+\texttt{fliplr}     & 0.5   & Горизонтальное отражение (вероятность) \\
+\texttt{mosaic}     & 1.0   & Mosaic-аугментация \\
+\texttt{erasing}    & 0.4   & Random erasing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Инфраструктура обучения}
+
+Обучение проводилось на облачной платформе vast.ai с использованием GPU. Скрипт настройки окружения:
+
+\begin{lstlisting}[language=bash, caption=Настройка окружения vast.ai, label=lst:vastai]
+# vastai_setup.sh
+pip install uv
+uv venv && source .venv/bin/activate
+uv sync
+uv run prepare-dataset
+uv run train --epochs 100 --batch 32 --model-size n
+\end{lstlisting}
+
+\section{Фреймворк оценки}
+
+\subsection{Метрики детекции объектов}
+
+\textbf{Precision (точность)} — доля правильных детекций:
+
+\begin{equation}
+    P = \frac{TP}{TP + FP}
+\label{eq:precision_det}
+\end{equation}
+
+\textbf{Recall (полнота)} — доля обнаруженных объектов:
+
+\begin{equation}
+    R = \frac{TP}{TP + FN}
+\label{eq:recall_det}
+\end{equation}
+
+\textbf{IoU (Intersection over Union):}
+
+\begin{equation}
+    \text{IoU} = \frac{|B_{pred} \cap B_{gt}|}{|B_{pred} \cup B_{gt}|}
+\label{eq:iou_metric}
+\end{equation}
+
+\textbf{AP (Average Precision)} — площадь под кривой precision-recall:
+
+\begin{equation}
+    \text{AP} = \int_0^1 P(R) \, dR
+\label{eq:ap}
+\end{equation}
+
+\textbf{mAP (mean Average Precision):}
+
+\begin{equation}
+    \text{mAP} = \frac{1}{|\mathcal{C}|} \sum_{c \in \mathcal{C}} \text{AP}_c
+\label{eq:map_metric}
+\end{equation}
+
+\subsection{Пороги IoU}
+
+Стандартные метрики COCO:
+\begin{itemize}
+    \item \textbf{mAP@0.5} — порог IoU = 0.5
+    \item \textbf{mAP@0.5:0.95} — среднее по порогам от 0.5 до 0.95 с шагом 0.05
+\end{itemize}
+
+\section{Детали реализации}
+
+Весь конвейер реализован на Python~3.13. Ключевые библиотеки:
+
+\begin{table}[H]
+\centering
+\caption{Используемые библиотеки}
+\label{tab:libraries}
+\begin{tabular}{ll}
+\toprule
+\textbf{Библиотека} & \textbf{Назначение} \\
+\midrule
+ultralytics $\geq$ 8.4.23 & YOLOv8 реализация и API \\
+kagglehub $\geq$ 1.0.0    & Загрузка датасетов из Kaggle \\
+litestar $\geq$ 2.21.1    & REST API фреймворк \\
+pillow $\geq$ 12.1.1      & Обработка изображений \\
+uvicorn $\geq$ 0.42.0     & ASGI сервер \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{lstlisting}[language=Python, caption=Обучение модели YOLOv8, label=lst:train]
+from ultralytics import YOLO
+from pathlib import Path
+
+DATASET_DIR = Path("dataset")
+MODELS_DIR = Path("models")
+
+def train(
+    epochs: int = 100,
+    batch: int = 32,
+    imgsz: int = 640,
+    model_size: str = "n"
+) -> Path:
+    model = YOLO(f"yolov8{model_size}.pt")
+
+    results = model.train(
+        data=str(DATASET_DIR / "data.yaml"),
+        epochs=epochs,
+        imgsz=imgsz,
+        batch=batch,
+        project=str(MODELS_DIR),
+        name="burn_detector",
+        exist_ok=True,
+    )
+
+    best_model = MODELS_DIR / "burn_detector" / "weights" / "best.pt"
+    return best_model
+\end{lstlisting}

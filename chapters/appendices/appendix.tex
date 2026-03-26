@@ -1,0 +1,346 @@
+\chapter{Дополнительные материалы}
+\label{app:supplementary}
+
+\section{Гиперпараметры обучения YOLOv8}
+
+\begin{table}[H]
+\centering
+\caption{Полный список гиперпараметров обучения}
+\label{tab:hp_full}
+\begin{tabular}{lll}
+\toprule
+\textbf{Параметр} & \textbf{Значение} & \textbf{Описание} \\
+\midrule
+\multicolumn{3}{l}{\textit{Основные параметры}} \\
+\texttt{model}            & yolov8n.pt & Базовая модель \\
+\texttt{epochs}           & 100        & Число эпох \\
+\texttt{batch}            & 32         & Размер батча \\
+\texttt{imgsz}            & 640        & Размер изображения \\
+\texttt{device}           & GPU        & Устройство обучения \\
+\texttt{workers}          & 8          & Число воркеров загрузки \\
+\texttt{pretrained}       & true       & Предобученные веса COCO \\
+\midrule
+\multicolumn{3}{l}{\textit{Оптимизатор}} \\
+\texttt{optimizer}        & auto       & Выбор оптимизатора \\
+\texttt{lr0}              & 0.01       & Начальная скорость обучения \\
+\texttt{lrf}              & 0.01       & Финальный LR (доля от lr0) \\
+\texttt{momentum}         & 0.937      & SGD momentum \\
+\texttt{weight\_decay}    & 0.0005     & L2-регуляризация \\
+\texttt{warmup\_epochs}   & 3.0        & Эпохи разогрева \\
+\texttt{warmup\_momentum} & 0.8        & Momentum при разогреве \\
+\texttt{warmup\_bias\_lr} & 0.1        & Bias LR при разогреве \\
+\midrule
+\multicolumn{3}{l}{\textit{Веса потерь}} \\
+\texttt{box}              & 7.5        & Вес box loss \\
+\texttt{cls}              & 0.5        & Вес classification loss \\
+\texttt{dfl}              & 1.5        & Вес DFL loss \\
+\midrule
+\multicolumn{3}{l}{\textit{Аугментация}} \\
+\texttt{hsv\_h}           & 0.015      & Изменение hue \\
+\texttt{hsv\_s}           & 0.7        & Изменение saturation \\
+\texttt{hsv\_v}           & 0.4        & Изменение value \\
+\texttt{translate}        & 0.1        & Случайный сдвиг \\
+\texttt{scale}            & 0.5        & Случайный масштаб \\
+\texttt{fliplr}           & 0.5        & Горизонтальное отражение \\
+\texttt{mosaic}           & 1.0        & Mosaic-аугментация \\
+\texttt{erasing}          & 0.4        & Random erasing \\
+\texttt{auto\_augment}    & randaugment & Стратегия аугментации \\
+\texttt{close\_mosaic}    & 10         & Отключить mosaic последние N эпох \\
+\midrule
+\multicolumn{3}{l}{\textit{Детекция}} \\
+\texttt{iou}              & 0.7        & IoU порог для NMS \\
+\texttt{max\_det}         & 300        & Макс. детекций на изображение \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Библиотеки Python}
+
+\begin{table}[H]
+\centering
+\caption{Версии библиотек Python, использованных в исследовании}
+\label{tab:python_env}
+\begin{tabular}{lll}
+\toprule
+\textbf{Библиотека} & \textbf{Версия} & \textbf{Назначение} \\
+\midrule
+Python        & 3.13    & Базовый язык программирования \\
+ultralytics   & 8.4.23+ & YOLOv8 реализация \\
+torch         & 2.0+    & PyTorch (бэкенд Ultralytics) \\
+kagglehub     & 1.0.0+  & Загрузка датасетов из Kaggle \\
+litestar      & 2.21.1+ & REST API фреймворк \\
+pillow        & 12.1.1+ & Обработка изображений \\
+uvicorn       & 0.42.0+ & ASGI сервер \\
+python-multipart & 0.0.22+ & Обработка multipart форм \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Код подготовки датасета}
+
+\begin{lstlisting}[language=Python, caption=Скрипт подготовки датасета (prepare\_dataset.py), label=lst:prepare]
+import shutil
+import random
+from pathlib import Path
+import kagglehub
+
+CLASSES = ["first_degree", "second_degree", "third_degree"]
+VAL_SPLIT = 0.2
+
+def download_dataset() -> Path:
+    path = kagglehub.dataset_download(
+        "shubhambaid/skin-burn-dataset"
+    )
+    return Path(path)
+
+def prepare_dataset(source_dir: Path, val_split: float = VAL_SPLIT) -> None:
+    images_train = DATASET_DIR / "images" / "train"
+    images_val = DATASET_DIR / "images" / "val"
+    labels_train = DATASET_DIR / "labels" / "train"
+    labels_val = DATASET_DIR / "labels" / "val"
+
+    for d in [images_train, images_val, labels_train, labels_val]:
+        d.mkdir(parents=True, exist_ok=True)
+
+    image_files = list(source_dir.glob("*.jpg"))
+    random.seed(42)
+    random.shuffle(image_files)
+
+    split_idx = int(len(image_files) * (1 - val_split))
+    train_images = image_files[:split_idx]
+    val_images = image_files[split_idx:]
+
+    for img_path in train_images:
+        label_path = img_path.with_suffix(".txt")
+        if label_path.exists():
+            shutil.copy(img_path, images_train / img_path.name)
+            shutil.copy(label_path, labels_train / label_path.name)
+
+    for img_path in val_images:
+        label_path = img_path.with_suffix(".txt")
+        if label_path.exists():
+            shutil.copy(img_path, images_val / img_path.name)
+            shutil.copy(label_path, labels_val / label_path.name)
+
+    # Create data.yaml configuration
+    data_yaml = DATASET_DIR / "data.yaml"
+    data_yaml.write_text(f"""path: {DATASET_DIR}
+train: images/train
+val: images/val
+
+names:
+  0: {CLASSES[0]}
+  1: {CLASSES[1]}
+  2: {CLASSES[2]}
+""")
+
+    print(f"Dataset prepared: {len(train_images)} train, {len(val_images)} val")
+\end{lstlisting}
+
+\section{Код обучения модели}
+
+\begin{lstlisting}[language=Python, caption=Скрипт обучения модели (train.py), label=lst:train_full]
+from pathlib import Path
+from ultralytics import YOLO
+
+def train(
+    epochs: int = 100,
+    imgsz: int = 640,
+    batch: int = 16,
+    model_size: str = "n",
+) -> Path:
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    data_yaml = DATASET_DIR / "data.yaml"
+
+    if not data_yaml.exists():
+        raise FileNotFoundError(
+            f"Dataset not found at {data_yaml}. "
+            "Run prepare_dataset.py first."
+        )
+
+    model = YOLO(f"yolov8{model_size}.pt")
+
+    results = model.train(
+        data=str(data_yaml),
+        epochs=epochs,
+        imgsz=imgsz,
+        batch=batch,
+        project=str(MODELS_DIR),
+        name="burn_detector",
+        exist_ok=True,
+    )
+
+    best_model = MODELS_DIR / "burn_detector" / "weights" / "best.pt"
+    print(f"Training complete. Best model: {best_model}")
+    return best_model
+\end{lstlisting}
+
+\section{REST API для инференса}
+
+\begin{lstlisting}[language=Python, caption=REST API сервер (api.py), label=lst:api]
+import io
+from dataclasses import dataclass
+
+from litestar import Litestar, get, post
+from litestar.datastructures import UploadFile
+from litestar.enums import RequestEncodingType
+from litestar.openapi import OpenAPIConfig
+from litestar.params import Body
+from litestar.response import Response
+from PIL import Image
+from ultralytics import YOLO
+
+
+@dataclass
+class Detection:
+    class_id: int
+    class_name: str
+    confidence: float
+    bbox: list[float]
+
+
+@dataclass
+class PredictionResponse:
+    detections: list[Detection]
+
+
+@get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@post("/predict")
+async def predict(
+    data: UploadFile = Body(media_type=RequestEncodingType.MULTI_PART),
+) -> PredictionResponse:
+    content = await data.read()
+    image = Image.open(io.BytesIO(content))
+
+    results = get_model().predict(image, verbose=False)
+    detections = []
+
+    for result in results:
+        for box in result.boxes:
+            detections.append(
+                Detection(
+                    class_id=int(box.cls[0]),
+                    class_name=result.names[int(box.cls[0])],
+                    confidence=float(box.conf[0]),
+                    bbox=box.xyxy[0].tolist(),
+                )
+            )
+
+    return PredictionResponse(detections=detections)
+
+
+@post("/predict/visualize")
+async def predict_visualize(
+    data: UploadFile = Body(media_type=RequestEncodingType.MULTI_PART),
+) -> Response[bytes]:
+    content = await data.read()
+    image = Image.open(io.BytesIO(content))
+
+    results = get_model().predict(image, verbose=False)
+    annotated = results[0].plot()
+
+    img_pil = Image.fromarray(annotated[..., ::-1])
+    buffer = io.BytesIO()
+    img_pil.save(buffer, format="JPEG")
+    buffer.seek(0)
+
+    return Response(
+        content=buffer.read(),
+        media_type="image/jpeg",
+    )
+
+
+app = Litestar(
+    route_handlers=[health, predict, predict_visualize],
+    openapi_config=OpenAPIConfig(
+        title="Burn Classifier API",
+        version="1.0.0",
+        description="Skin burn detection using YOLOv8",
+    ),
+)
+\end{lstlisting}
+
+\section{Пример использования API}
+
+\begin{lstlisting}[language=bash, caption=Server launch and API request, label=lst:api_usage]
+# Start server
+uvicorn burn_classifier.api:app --host 0.0.0.0 --port 8000
+
+# Send image for analysis (JSON response)
+curl -X POST "http://localhost:8000/predict" \
+     -F "data=@burn_image.jpg"
+
+# Example response:
+# {
+#   "detections": [
+#     {
+#       "class_id": 1,
+#       "class_name": "second_degree",
+#       "confidence": 0.89,
+#       "bbox": [120.5, 80.2, 340.8, 280.5]
+#     }
+#   ]
+# }
+
+# Get image with visualization
+curl -X POST "http://localhost:8000/predict/visualize" \
+     -F "data=@burn_image.jpg" \
+     --output result.jpg
+\end{lstlisting}
+
+\section{Скрипт настройки vast.ai}
+
+\begin{lstlisting}[language=bash, caption=Cloud environment setup script (vastai\_setup.sh), label=lst:vastai]
+#!/bin/bash
+# vast.ai GPU server environment setup
+
+# Install uv (fast Python package manager)
+pip install uv
+
+# Create virtual environment
+uv venv && source .venv/bin/activate
+
+# Install dependencies
+uv sync
+
+# Prepare dataset
+uv run prepare-dataset
+
+# Start training
+uv run train --epochs 100 --batch 32 --model-size n
+
+# After training - start API server
+uv run serve
+\end{lstlisting}
+
+\section{Структура проекта}
+
+\begin{verbatim}
+burn-classifier/
+|-- src/
+|   |-- burn_classifier/
+|       |-- __init__.py          # Пути и константы
+|       |-- prepare_dataset.py   # Подготовка данных
+|       |-- train.py             # Обучение модели
+|       |-- api.py               # REST API
+|-- dataset/
+|   |-- images/
+|   |   |-- train/               # 980 изображений
+|   |   |-- val/                 # 245 изображений
+|   |-- labels/
+|   |   |-- train/               # Аннотации YOLO
+|   |   |-- val/
+|   |-- data.yaml                # Конфигурация
+|-- models/
+|   |-- burn_detector/
+|       |-- weights/
+|           |-- best.pt          # Лучшая модель
+|           |-- last.pt          # Последняя эпоха
+|-- pyproject.toml               # Зависимости
+|-- vastai_setup.sh              # Настройка облака
+|-- yolov8n.pt                   # Базовые веса
+\end{verbatim}
