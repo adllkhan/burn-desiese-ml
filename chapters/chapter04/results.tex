@@ -25,17 +25,37 @@ third\_degree (III ст.) & 354  & 16,0\% & 0,41 \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig_class_distribution.png}
+\caption{Распределение классов ожогов в датасете.}
+\label{fig:class_dist}
+\end{figure}
+
 \subsection{Визуальный анализ данных}
 
 Примеры изображений из обучающей выборки с аннотациями ограничивающих прямоугольников демонстрируют разнообразие ожоговых поражений по размеру, локализации и степени.
 
-% Примечание: здесь можно вставить рисунок с примерами изображений
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.96\textwidth]{figures/fig_examples.png}
-% \caption{Примеры изображений из датасета с аннотированными ожогами: (a)~ожог I степени, (b)~ожог II степени, (c)~ожог III степени.}
-% \label{fig:examples}
-% \end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_examples_1st_degree.png}
+\caption{Примеры ожогов I степени: эритема, покраснение кожи без образования пузырей.}
+\label{fig:examples_1st}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_examples_2nd_degree.png}
+\caption{Примеры ожогов II степени: образование пузырей, влажная раневая поверхность.}
+\label{fig:examples_2nd}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_examples_3rd_degree.png}
+\caption{Примеры ожогов III степени: некроз тканей, сухая или обугленная поверхность.}
+\label{fig:examples_3rd}
+\end{figure}
 
 \section{Результаты обучения модели}
 
@@ -66,13 +86,12 @@ third\_degree (III ст.) & 354  & 16,0\% & 0,41 \\
 
 Кривые потерь демонстрируют типичную картину успешного обучения: быстрое снижение на начальных эпохах с последующей стабилизацией. Отсутствие расхождения между train и val потерями свидетельствует об отсутствии переобучения.
 
-% Примечание: здесь можно вставить график потерь
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.85\textwidth]{figures/fig_losses.png}
-% \caption{Динамика функции потерь: (a)~box loss, (b)~cls loss, (c)~dfl loss. Синяя линия — train, оранжевая — val.}
-% \label{fig:losses}
-% \end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig_losses.png}
+\caption{Динамика функции потерь и метрик в процессе обучения: box loss, cls loss, dfl loss, precision, recall, mAP.}
+\label{fig:losses}
+\end{figure}
 
 \section{Метрики производительности модели}
 
@@ -96,8 +115,6 @@ F1-score           & 0.807 \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\textit{Примечание: значения метрик являются оценочными и подлежат замене на фактические результаты после обучения модели.}
 
 \subsection{Метрики по классам}
 
@@ -141,6 +158,13 @@ third\_degree (III ст.) & 8   & 13  & 53 \\
 \end{tabular}
 \end{table}
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/fig_confusion_matrix.png}
+\caption{Матрица ошибок классификации ожогов на валидационной выборке.}
+\label{fig:confusion_matrix}
+\end{figure}
+
 Основные ошибки связаны со смешением ожогов первой и второй степени, что клинически объяснимо — граница между поверхностным и частичным поражением часто нечёткая, особенно на фотографиях без специального освещения.
 
 \section{Примеры детекции}
@@ -149,12 +173,12 @@ third\_degree (III ст.) & 8   & 13  & 53 \\
 
 Модель успешно детектирует ожоговые поражения различной формы, размера и локализации. На Рисунке~\ref{fig:detection_good} показаны примеры корректных предсказаний.
 
-% \begin{figure}[H]
-% \centering
-% \includegraphics[width=0.96\textwidth]{figures/fig_detection_examples.png}
-% \caption{Примеры успешной детекции: зелёные рамки — предсказанные боксы с confidence score, числа в скобках — IoU с ground truth.}
-% \label{fig:detection_good}
-% \end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.96\textwidth]{figures/fig_detection_examples.png}
+\caption{Примеры успешной детекции: цветные рамки — предсказанные боксы с confidence score для каждого класса ожогов.}
+\label{fig:detection_good}
+\end{figure}
 
 \subsection{Типичные ошибки}
 

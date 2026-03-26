@@ -159,6 +159,13 @@ names:
 
 \textbf{Head (Decoupled):} Разделённая голова с независимыми ветвями для классификации и регрессии координат.
 
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig_yolov8_architecture.png}
+\caption{Архитектура модели YOLOv8: backbone (CSPDarknet), neck (PANet) и decoupled head.}
+\label{fig:yolov8_arch}
+\end{figure}
+
 \subsection{Трансферное обучение}
 
 Модель инициализируется весами, предобученными на датасете COCO (Common Objects in Context, 80 классов, $>$330K изображений). Предобученные веса загружаются из файла \texttt{yolov8n.pt}:
