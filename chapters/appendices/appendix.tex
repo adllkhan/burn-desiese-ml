@@ -3,14 +3,25 @@
 
 \section{Гиперпараметры обучения YOLOv8}
 
-\begin{table}[H]
-\centering
-\caption{Полный список гиперпараметров обучения}
-\label{tab:hp_full}
-\begin{tabular}{lll}
+В Таблице~\ref{tab:hp_full} приведён полный список гиперпараметров обучения, сгруппированных по функциональному назначению: основные параметры, настройки оптимизатора, весовые коэффициенты функции потерь, параметры аугментации и параметры детекции. Таблица занимает несколько страниц.
+
+\begin{longtable}{p{3.8cm} p{2.6cm} p{7cm}}
+\caption{Полный список гиперпараметров обучения модели YOLOv8n. Значения соответствуют конфигурации, использованной в данной работе.}
+\label{tab:hp_full} \\
 \toprule
 \textbf{Параметр} & \textbf{Значение} & \textbf{Описание} \\
 \midrule
+\endfirsthead
+\multicolumn{3}{l}{\textit{Продолжение Таблицы~\ref{tab:hp_full}}} \\
+\toprule
+\textbf{Параметр} & \textbf{Значение} & \textbf{Описание} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{\textit{Продолжение на следующей странице}} \\
+\endfoot
+\bottomrule
+\endlastfoot
 \multicolumn{3}{l}{\textit{Основные параметры}} \\
 \texttt{model}            & yolov8n.pt & Базовая модель \\
 \texttt{epochs}           & 100        & Число эпох \\
@@ -50,9 +61,7 @@
 \multicolumn{3}{l}{\textit{Детекция}} \\
 \texttt{iou}              & 0.7        & IoU порог для NMS \\
 \texttt{max\_det}         & 300        & Макс. детекций на изображение \\
-\bottomrule
-\end{tabular}
-\end{table}
+\end{longtable}
 
 \section{Библиотеки Python}
 
