@@ -5,12 +5,11 @@
 \section{Описание набора данных}
 
 \subsection{Источник данных}
-
-Основной набор данных — \textit{Skin Burn Dataset}, опубликованный на платформе Kaggle~\cite{kaggle_burn_dataset}, содержащий \textbf{1\,225 изображений} ожоговых поражений кожи с аннотациями в формате YOLO. Датасет включает три класса ожогов различной степени тяжести с размеченными ограничивающими прямоугольниками (bounding boxes).
+В работе используется набор данных \textit{Skin Burn Dataset}, опубликованный на Kaggle~\cite{kaggle_burn_dataset}. Датасет содержит \textbf{1\,225 изображений} ожогов кожи. Каждое изображение снабжено аннотациями в формате YOLO. Ожоги распределены на три класса по степени тяжести; для каждого изображения указаны ограничивающие прямоугольники (bounding boxes).
 
 \subsection{Описание классов}
 
-Таблица~\ref{tab:classes} описывает все 3 класса набора данных и их клиническую интерпретацию.
+В Таблице~\ref{tab:classes} приведены три класса набора данных вместе с их клинической интерпретацией.
 
 \begin{table}[H]
 \centering
@@ -20,16 +19,16 @@
 \toprule
 \textbf{ID} & \textbf{Название} & \textbf{Мед. термин} & \textbf{Клиническое описание} \\
 \midrule
-0 & \texttt{first\_degree}  & Ожог I степени  & Поверхностный ожог, затрагивает только эпидермис \\
-1 & \texttt{second\_degree} & Ожог II степени & Частичная толщина, проникает в дерму \\
-2 & \texttt{third\_degree}  & Ожог III степени & Полная толщина, разрушает все слои кожи \\
+0 & \texttt{first\_degree}  & Ожог I степени   & Поверхностный ожог, затрагивающий только эпидермис \\
+1 & \texttt{second\_degree} & Ожог II степени  & Частичная толщина, проникает в дерму \\
+2 & \texttt{third\_degree}  & Ожог III степени & Глубокий ожог, проникающий через все слои кожи \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Распределение классов}
 
-Набор данных разделён на обучающую (80\%, $n{=}980$) и валидационную (20\%, $n{=}245$) выборки. Распределение аннотаций по классам представлено в Таблице~\ref{tab:distribution}.
+Набор данных разделён в соотношении 80\%~/~20\%: 80\% ($n{=}980$) --- обучающая часть, 20\% ($n{=}245$) --- валидационная. Распределение аннотаций по классам приведено в Таблице~\ref{tab:distribution}.
 
 \begin{table}[H]
 \centering
@@ -41,39 +40,38 @@
 \midrule
 first\_degree (I ст.)   & 669 & 203 & 872 \\
 second\_degree (II ст.) & 797 & 190 & 987 \\
-third\_degree (III ст.) & 280 & 74  & 354 \\
+third\_degree (III ст.) & 280 &  74 & 354 \\
 \midrule
 \textbf{Итого} & \textbf{1\,746} & \textbf{467} & \textbf{2\,213} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Датасет демонстрирует дисбаланс классов: ожоги третьей степени представлены в 2,8 раза реже, чем ожоги второй степени. Это соответствует реальной клинической практике, где тяжёлые ожоги встречаются реже.
+В датасете наблюдается дисбаланс классов: ожоги третьей степени встречаются примерно в 2{,}8 раза реже, чем ожоги второй степени. Это согласуется с клинической практикой, где тяжёлые ожоги встречаются реже.
 
 \section{Формат аннотаций YOLO}
 
-Каждое изображение сопровождается текстовым файлом аннотации в формате YOLO:
+Для каждого изображения создаётся отдельный файл аннотации в формате YOLO:
 
 \begin{equation}
-    \text{annotation} = (\texttt{class\_id}, x_c, y_c, w, h)
+\text{annotation} = (\texttt{class\_id},\, x_c,\, y_c,\, w,\, h)
 \label{eq:yolo_format}
 \end{equation}
 
-\noindent где \texttt{class\_id} — идентификатор класса (0, 1 или 2); $(x_c, y_c)$ — нормализованные координаты центра ограничивающего прямоугольника; $(w, h)$ — нормализованные ширина и высота. Все значения находятся в диапазоне $[0, 1]$, нормализованы относительно размеров изображения.
+\noindent где \texttt{class\_id} --- номер класса (0, 1 или 2); $(x_c, y_c)$ --- нормированные координаты центра прямоугольника; $(w, h)$ --- нормированные ширина и высота. Все числа лежат в диапазоне $[0,1]$ относительно размеров изображения.
 
-Пример аннотации:
+Пример аннотации (два ожога второй степени на одном изображении):
+
 \begin{verbatim}
 1 0.5717 0.5138 0.2975 0.4309
 1 0.5860 0.1519 0.1541 0.1823
 \end{verbatim}
 
-Это означает, что на изображении обнаружены два ожога второй степени (class\_id = 1) с указанными координатами.
-
 \section{Конвейер предобработки данных}
 
 \subsection{Загрузка и подготовка датасета}
 
-Датасет загружается из Kaggle с использованием библиотеки \texttt{kagglehub}:
+Датасет загружается с Kaggle с помощью библиотеки \texttt{kagglehub}:
 
 \begin{lstlisting}[language=Python, caption=Загрузка датасета из Kaggle, label=lst:download]
 import kagglehub
@@ -88,7 +86,7 @@ def download_dataset() -> Path:
 
 \subsection{Разделение на train/val}
 
-Датасет разделяется на обучающую и валидационную выборки с соотношением 80/20 и фиксированным random seed для воспроизводимости:
+Датасет делится на обучающую и валидационную части в соотношении 80\%~/~20\% с фиксированным random seed для воспроизводимости результатов.
 
 \begin{lstlisting}[language=Python, caption=Разделение данных, label=lst:split]
 import random
@@ -106,22 +104,22 @@ val_images = image_files[split_idx:]
 
 \subsection{Формирование структуры директорий}
 
-Для совместимости с YOLOv8 создаётся следующая структура:
+Для совместимости с YOLOv8 формируется следующая структура каталогов:
 
 \begin{verbatim}
 dataset/
-  |-- images/
-  |     |-- train/    # 980 изображений
-  |     |-- val/      # 245 изображений
-  |-- labels/
-  |     |-- train/    # 980 файлов аннотаций
-  |     |-- val/      # 245 файлов аннотаций
-  |-- data.yaml       # Конфигурационный файл
+|-- images/
+|   |-- train/   # 980 изображений
+|   |-- val/     # 245 изображений
+|-- labels/
+|   |-- train/   # 980 файлов аннотаций
+|   |-- val/     # 245 файлов аннотаций
+|-- data.yaml    # Конфигурационный файл
 \end{verbatim}
 
 \subsection{Конфигурационный файл data.yaml}
 
-\begin{lstlisting}[language=Python, caption=Содержимое data.yaml, label=lst:yaml]
+\begin{lstlisting}[caption=Содержимое data.yaml, label=lst:yaml]
 path: /path/to/dataset
 train: images/train
 val: images/val
@@ -136,39 +134,39 @@ names:
 
 \subsection{Выбор варианта модели}
 
-Для данного исследования выбран YOLOv8n (nano) — компактный вариант архитектуры с приблизительно 3,2~млн параметров. Выбор обоснован следующими факторами:
+Для исследования выбрана модель YOLOv8n (nano) --- наименьший вариант линейки YOLOv8, содержащий около 3{,}2~млн параметров. Выбор обусловлен следующими причинами:
 
 \begin{enumerate}
-    \item \textbf{Баланс скорости и точности}: YOLOv8n обеспечивает детекцию в реальном времени при сохранении конкурентной точности.
-    \item \textbf{Размер датасета}: Для датасета из 1\,225 изображений крупные модели избыточны и склонны к переобучению.
-    \item \textbf{Практическое применение}: Компактная модель легче интегрировать в мобильные и веб-приложения.
+\item \textbf{Баланс скорости и точности.} YOLOv8n обеспечивает быструю детекцию объектов при сохранении высокой точности, что подходит для применения в режиме реального времени.
+\item \textbf{Размер датасета.} При наличии 1\,225 изображений более крупные модели склонны к переобучению; компактная модель является более надёжным выбором.
+\item \textbf{Практическое применение.} Компактную модель проще интегрировать в мобильные и веб-приложения.
 \end{enumerate}
 
 \subsection{Архитектурные компоненты}
 
-\textbf{Backbone (CSPDarknet):} Извлекает признаки из входного изображения через последовательность C2f-блоков (Cross Stage Partial с двумя свёртками):
+\textbf{Backbone (CSPDarknet).} Извлекает признаки из входного изображения, последовательно применяя свёрточные блоки C2f (Cross Stage Partial из двух свёрток) с остаточными соединениями:
 
 \begin{equation}
-    \mathbf{h}_{out} = \text{Concat}\left(\mathbf{h}_{main}, \mathbf{h}_{shortcut}\right)
+\mathbf{h}_{out} = \text{Concat}(\mathbf{h}_{main},\, \mathbf{h}_{shortcut})
 \label{eq:c2f}
 \end{equation}
 
-\noindent где $\mathbf{h}_{main}$ — выход основной ветви через bottleneck-блоки; $\mathbf{h}_{shortcut}$ — shortcut-соединение.
+\noindent где $\mathbf{h}_{main}$ --- выход основной ветви, проходящей через bottleneck-блоки; $\mathbf{h}_{shortcut}$ --- shortcut-соединение.
 
-\textbf{Neck (PANet):} Path Aggregation Network агрегирует признаки разных масштабов для детекции объектов различного размера.
+\textbf{Neck (PANet).} Path Aggregation Network агрегирует признаки разных масштабов, что позволяет детектировать объекты разных размеров.
 
-\textbf{Head (Decoupled):} Разделённая голова с независимыми ветвями для классификации и регрессии координат.
+\textbf{Head (Decoupled).} Голова с двумя независимыми ветвями: одна выполняет классификацию, другая --- регрессию координат.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.95\textwidth]{figures/fig_yolov8_architecture.png}
-\caption{Архитектура модели YOLOv8: backbone (CSPDarknet), neck (PANet) и decoupled head.}
+\caption{Архитектура YOLOv8: backbone (CSPDarknet), neck (PANet) и decoupled head.}
 \label{fig:yolov8_arch}
 \end{figure}
 
 \subsection{Трансферное обучение}
 
-Модель инициализируется весами, предобученными на датасете COCO (Common Objects in Context, 80 классов, $>$330K изображений). Предобученные веса загружаются из файла \texttt{yolov8n.pt}:
+Модель инициализируется весами, предобученными на датасете COCO (Common Objects in Context, 80 классов, более 330\,000 изображений). Веса загружаются из файла \texttt{yolov8n.pt}:
 
 \begin{lstlisting}[language=Python, caption=Инициализация модели, label=lst:init]
 from ultralytics import YOLO
@@ -180,7 +178,7 @@ model = YOLO("yolov8n.pt")  # 6.2 MB
 
 \subsection{Гиперпараметры}
 
-Таблица~\ref{tab:hyperparams} содержит основные гиперпараметры обучения.
+Основные гиперпараметры обучения приведены в Таблице~\ref{tab:hyperparams}.
 
 \begin{table}[H]
 \centering
@@ -262,14 +260,14 @@ uv run train --epochs 100 --batch 32 --model-size n
 
 \subsection{Метрики детекции объектов}
 
-\textbf{Precision (точность)} — доля правильных детекций:
+\textbf{Precision (точность)} --- доля правильных детекций:
 
 \begin{equation}
     P = \frac{TP}{TP + FP}
 \label{eq:precision_det}
 \end{equation}
 
-\textbf{Recall (полнота)} — доля обнаруженных объектов:
+\textbf{Recall (полнота)} --- доля обнаруженных объектов:
 
 \begin{equation}
     R = \frac{TP}{TP + FN}
@@ -283,7 +281,7 @@ uv run train --epochs 100 --batch 32 --model-size n
 \label{eq:iou_metric}
 \end{equation}
 
-\textbf{AP (Average Precision)} — площадь под кривой precision-recall:
+\textbf{AP (Average Precision)} --- площадь под кривой precision-recall:
 
 \begin{equation}
     \text{AP} = \int_0^1 P(R) \, dR
@@ -301,8 +299,8 @@ uv run train --epochs 100 --batch 32 --model-size n
 
 Стандартные метрики COCO:
 \begin{itemize}
-    \item \textbf{mAP@0.5} — порог IoU = 0.5
-    \item \textbf{mAP@0.5:0.95} — среднее по порогам от 0.5 до 0.95 с шагом 0.05
+    \item \textbf{mAP@0.5} --- порог IoU = 0.5
+    \item \textbf{mAP@0.5:0.95} --- среднее по порогам от 0.5 до 0.95 с шагом 0.05
 \end{itemize}
 
 \section{Детали реализации}
