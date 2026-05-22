@@ -270,11 +270,11 @@ $\mathcal{L}_{dfl}$ (DFL) & 1.5 & Distribution Focal Loss refines coordinates \\
 \begin{lstlisting}[language=bash, caption={Скрипт, который настраивает окружение и запускает обучение на vast.ai}, label=lst:vastai]
 # vastai_setup.sh
 pip install uv
-Run uv venv && source .venv/bin/activate. Run uv venv and then source .venv/bin/activate to set up the virtual environment and activate it.
+uv venv && source .venv/bin/activate
 uv sync
 uv run prepare-dataset
-Запусти обучение командой uv run train --epochs 100 --batch 32 --model-size n. Параметры: epochs 100, batch 32, model-size n.
-Вот, что пользователь ввёл: \end{lstlisting}
+uv run train --epochs 100 --batch 32 --model-size n
+\end{lstlisting}
 
 Вот как работает менеджер пакетов \texttt{uv}. Менеджер пакетов \texttt{uv} же быстро ставит зависимости. Команда \texttt{uv run} берёт подкоманды из \texttt{pyproject.toml} и сразу их запускает, да. Мне нравится, что менеджер пакетов \texttt{uv} позволяет полностью повторить эксперимент – просто клонировать репозиторий и запустить один скрипт, вот.
 
