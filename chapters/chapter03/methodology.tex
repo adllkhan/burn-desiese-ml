@@ -170,7 +170,7 @@ names:
 
 Обучая модель с нуля на 1\,225 изображениях вполне правдоподобно было бы заполучить результат приемлемой обучения. Поэтому для этой цели применяется трансферное обучение~\cite{yosinski2014transfer}: весовая инициализация модели производится предобученными весами, полученными на масштабном датасете COCO~\cite{lin2014coco} в составе 80 классов общеизвестных объектов и более 330\,000 изображений. В процессе предобучения backbone и neck формируют универсальные представления визуальных свойств (краев, текстур, форм), которые впоследствии подстраиваются под конкретную задачу классификации ожогов. Веса подгружаются из файла \texttt{yolov8n. pt}, который идет в комплекте с фреймворком Ultralytics:
 
-\begin{lstlisting}[language=Python, caption=Инициализация модели YOLOv8n с весами, предобученными на COCO, label=lst:init]
+\begin{lstlisting}[language=Python, caption={Инициализация модели YOLOv8n с весами, предобученными на COCO}, label=lst:init]
 from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt") # 6. 2 MB
@@ -267,7 +267,7 @@ $\mathcal{L}_{dfl}$ (DFL) & 1.5 & Distribution Focal Loss refines coordinates \\
 
 Обучали модель на облачной платформе vast.ai~\cite{vastai2023} с GPU. Мне понравилось, что аренда GPU на vast.ai обошлась гораздо дешевле, чем покупка своей видеокарты той же мощности, и так можно быстро менять вычислительные ресурсы под задачу. Скрипт настройки окружения сам ставит нужные зависимости и запускает обучение:
 
-\begin{lstlisting}[language=bash, caption=Скрипт, который настраивает окружение и запускает обучение на vast.ai, label=lst:vastai]
+\begin{lstlisting}[language=bash, caption={Скрипт, который настраивает окружение и запускает обучение на vast.ai}, label=lst:vastai]
 # vastai_setup.sh
 pip install uv
 Run uv venv && source .venv/bin/activate. Run uv venv and then source .venv/bin/activate to set up the virtual environment and activate it.
@@ -313,7 +313,7 @@ R = \frac{TP}{TP + FN}
 
 Это деление площади пересечения предсказанной и реальной области на площадь их объединения. Чем выше IoU, тем лучше совпадение.
 
-Вот уравнение \eqref{eq:iou_metric} берёт $B_{pred}$ как предсказанный бокс и $B_{gt}$ как ground truth. IoU может быть от 0, когда ничего не перекрывается, до 1, когда полностью совпадает. Я считаю объект true positive, если $\text{IoU} \geq \text{threshold}$, обычно ставлю порог 0{,}5. Всё понятно.
+Вот уравнение \eqref{eq:iou_metric} берёт $B_{pred}$ как предсказанный бокс и $B_{gt}$ как ground truth. IoU может быть от 0, когда ничего не перекрывается, до 1, когда полностью совпадает. Я считаю объект true positive, если $\text{IoU} \geq \text{threshold}$, обычно ставлю порог 0{,}5. Всё понятно.
 
 \textbf{AP (Average Precision).} Площадь под кривой precision-recall: это площадь, которую покрывает кривая precision-recall. Площадь под кривой precision-recall показывает, насколько модель точна. Я часто считаю площадь под кривой precision-recall, чтобы сравнивать модели.
 
@@ -333,7 +333,7 @@ R = \frac{TP}{TP + FN}
 \label{eq:map_metric}
 \end{equation}
 
-В формуле~\eqref{eq:map_metric} \(\mathcal{C}\) — набор классов задачи. Здесь \(|\mathcal{C}|=3\), то есть три класса. \(\text{AP}_c\) измеряет среднюю точность для класса \(c\). Я считаю mAP главной метрикой, когда сравниваю детекторы объектов. По‑моему, именно mAP используют почти все современные бенчмарки~\cite{lin2014coco,everingham2010pascal}.
+В формуле~\eqref{eq:map_metric} \(\mathcal{C}\) — набор классов задачи. Здесь \(|\mathcal{C}|=3\), то есть три класса. \(\text{AP}_c\) измеряет среднюю точность для класса \(c\). Я считаю mAP главной метрикой, когда сравниваю детекторы объектов. По‑моему, именно mAP используют почти все современные бенчмарки~\cite{lin2014coco,everingham2010pascal}.
 
 \subsection{Пороги IoU}
 
