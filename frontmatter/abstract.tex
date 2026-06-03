@@ -13,3 +13,39 @@
 \keywords{ожоговая болезнь, глубокое обучение, YOLOv8, детекция объектов, медицинская визуализация, классификация изображений, компьютерное зрение}
 
 \end{SingleSpace}
+
+\chapter{Abstract}
+\thispagestyle{empty}
+\begin{SingleSpace}
+\selectlanguage{english}
+
+\noindent Burn injury is a severe and global healthcare burden: according to the World Health Organization, about 11 million people suffer from burns every year. Correct and timely classification of burn degree is critically important for the adequate choice of treatment tactics: first-degree burns require outpatient treatment, whereas third-degree burns require hospitalization with possible surgical intervention.
+
+\noindent This dissertation develops an automatic burn-degree classification system based on deep learning that uses the YOLOv8 architecture. The model was trained on the Kaggle Skin Burn Dataset, which contains 1\,225 images of skin burn lesions distributed across three classes: first-degree (superficial), second-degree (partial-thickness) and third-degree (full-thickness) burns.
+
+\noindent The proposed YOLOv8n (nano) model achieved mAP@0.5 = 0.847, precision = 0.823 and recall = 0.791. The YOLOv8 architecture was chosen for its real-time object detection capability and high performance on medical images. The model was trained on the vast.ai cloud GPU platform using transfer learning from pre-trained COCO weights.
+
+\noindent The scientific novelty lies in applying the novel YOLOv8 object-detection architecture to the task of burn lesion classification, in building a pipeline for medical image processing with data augmentation, and in developing a REST API for the practical use of the model in clinical settings.
+
+\vspace{0.8em}
+\par\noindent{\small\textbf{Keywords:} burn disease, deep learning, YOLOv8, object detection, medical imaging, image classification, computer vision}
+
+\selectlanguage{russian}
+\end{SingleSpace}
+
+\chapter{Аңдатпа}
+\thispagestyle{empty}
+\begin{SingleSpace}
+
+\noindent Күйік жарақаты — ауыр әрі жаһандық денсаулық сақтау жүгі: Дүниежүзілік денсаулық сақтау ұйымының деректері бойынша жыл сайын шамамен 11 миллион адам күйіктен зардап шегеді. Күйік дәрежесін дұрыс әрі уақтылы жіктеу емдеу тактикасын дұрыс таңдау үшін аса маңызды: 1-дәрежелі күйіктер амбулаторлық емдеуді қажет етеді, ал 3-дәрежелі күйіктер ықтимал хирургиялық араласумен ауруханаға жатқызуды талап етеді.
+
+\noindent Бұл диссертацияда YOLOv8 архитектурасын қолданатын, терең оқытуға негізделген күйік дәрежелерін автоматты жіктеу жүйесі әзірленді. Модель Kaggle Skin Burn Dataset деректер жинағында оқытылды; ол теріні күйікпен зақымдаудың 1\,225 суретінен тұрады және үш класқа бөлінген: 1-дәрежелі (беткейлік), 2-дәрежелі (ішінара қалыңдықтағы) және 3-дәрежелі (толық қалыңдықтағы) күйіктер.
+
+\noindent Ұсынылған YOLOv8n (nano) моделі mAP@0.5 = 0.847, precision = 0.823, recall = 0.791 көрсеткіштеріне қол жеткізді. YOLOv8 архитектурасы нақты уақыттағы объектілерді анықтау мүмкіндігі мен медициналық кескіндердегі жоғары өнімділігі үшін таңдалды. Модельді оқыту COCO алдын ала оқытылған салмақтарына трансферлік оқытуды қолдана отырып, vast.ai бұлттық GPU платформасында жүргізілді.
+
+\noindent Ғылыми жаңалық — күйік зақымдануларын жіктеу міндеті үшін объектілерді анықтаудың жаңа YOLOv8 архитектурасын қолдануда, медициналық кескіндерді деректерді аугментациялаумен өңдеу конвейерін қалыптастыруда және модельді клиникалық жағдайда практикалық қолдану үшін REST API әзірлеуде.
+
+\vspace{0.8em}
+\par\noindent{\small\textbf{Түйінді сөздер:} күйік ауруы, терең оқыту, YOLOv8, объектілерді анықтау, медициналық визуализация, кескіндерді жіктеу, компьютерлік көру}
+
+\end{SingleSpace}
