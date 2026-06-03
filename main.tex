@@ -8,6 +8,12 @@
 \usepackage[utf8]{inputenc}
 \usepackage[english,russian]{babel}
 
+% Force Latin (English) text to also use the T2A encoding, which contains the
+% full Latin alphabet. This guarantees Cyrillic (\CYR... commands) is always
+% available and never lands in a T1 context — including when LaTeX replays a
+% stale .toc/.lot/.lof aux file that still carries an old \select@language{english}.
+\AtBeginDocument{\def\latinencoding{T2A}}
+
 \settrimmedsize{297mm}{210mm}{*}
 \setlength{\trimtop}{0pt}
 \setlength{\trimedge}{\stockwidth}
